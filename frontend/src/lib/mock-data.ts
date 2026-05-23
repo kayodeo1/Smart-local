@@ -91,6 +91,104 @@ export const MOCK_ATTRACTIONS: AttractionData[] = [
     price: "Boat Fare",
     category: "Beaches",
   },
+  {
+    id: "olumo-rock",
+    name: "Olumo Rock",
+    image:
+      "https://images.unsplash.com/photo-1504541316369-51f315861945?w=800&q=80&fit=crop",
+    matchScore: 95,
+    rating: 4.6,
+    description:
+      "A massive granite monolith in the heart of Abeokuta. Climb to the top for breathtaking panoramic views of the city and surrounding landscape.",
+    tags: ["Nature", "Active"],
+    location: "Abeokuta, Ogun State",
+    price: "₦1,000",
+    category: "Nature & Parks",
+  },
+  {
+    id: "kajuru-castle",
+    name: "Kajuru Castle",
+    image:
+      "https://images.unsplash.com/photo-1773325724090-e46d4838ab6f?w=800&q=80&fit=crop",
+    matchScore: 90,
+    rating: 4.7,
+    description:
+      "A medieval-German-style castle built in 1989, nestled on a mountaintop in Kaduna State. Features turrets, an armory, and a dungeon.",
+    tags: ["Culture", "Luxury"],
+    location: "Kajuru, Kaduna State",
+    price: "₦50,000/night",
+    category: "Art & Culture",
+  },
+  {
+    id: "gurara-falls",
+    name: "Gurara Falls",
+    image:
+      "https://images.unsplash.com/photo-1620246403639-71409c17084b?w=800&q=80&fit=crop",
+    matchScore: 88,
+    rating: 4.4,
+    description:
+      "A stunning 30-meter waterfall on the Gurara River. A popular picnic spot with natural pools perfect for swimming during the rainy season.",
+    tags: ["Nature", "Relaxation"],
+    location: "Niger State",
+    price: "₦500",
+    category: "Nature & Parks",
+  },
+  {
+    id: "freedom-park",
+    name: "Freedom Park Lagos",
+    image:
+      "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800&q=80&fit=crop",
+    matchScore: 85,
+    rating: 4.3,
+    description:
+      "A memorial and leisure park on Lagos Island, built on the site of a former colonial prison. Now a vibrant cultural hub with events and exhibitions.",
+    tags: ["Culture", "History"],
+    location: "Lagos Island, Lagos",
+    price: "₦1,000",
+    category: "Art & Culture",
+  },
+  {
+    id: "obudu-mountain",
+    name: "Obudu Mountain Resort",
+    image:
+      "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80&fit=crop",
+    matchScore: 93,
+    rating: 4.8,
+    description:
+      "A serene mountain resort perched 1,576 metres above sea level. Enjoy cable car rides, breathtaking views, and cool climate year-round.",
+    tags: ["Nature", "Luxury"],
+    location: "Cross River State",
+    price: "₦35,000/night",
+    category: "Nature & Parks",
+  },
+  {
+    id: "yankari-park",
+    name: "Yankari National Park",
+    image:
+      "https://images.unsplash.com/photo-1758881534670-ef0b5b30bd2a?w=800&q=80&fit=crop",
+    matchScore: 91,
+    rating: 4.6,
+    description:
+      "Nigeria's most popular wildlife reserve. Home to elephants, baboons, hippos, and over 350 bird species. Features warm spring waterfalls.",
+    tags: ["Nature", "Active"],
+    location: "Bauchi State",
+    price: "₦3,000",
+    category: "Nature & Parks",
+  },
+  {
+    id: "ikogosi-springs",
+    name: "Ikogosi Warm Springs",
+    image:
+      "https://images.unsplash.com/photo-1758399800542-8fc59bc61e35?w=800&q=80&fit=crop",
+    matchScore: 87,
+    rating: 4.4,
+    description:
+      "A unique natural phenomenon where warm and cold springs meet at the same point. Surrounded by lush tropical forest with resort facilities.",
+    tags: ["Nature", "Relaxation"],
+    location: "Ekiti State",
+    price: "₦2,000",
+    category: "Nature & Parks",
+  },
 ];
 
 export function getAttractionById(id: string): AttractionData | undefined {

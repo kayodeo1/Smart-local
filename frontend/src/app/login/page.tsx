@@ -110,7 +110,7 @@ export default function LoginPage() {
                 </label>
                 <Link
                   className="font-label-sm text-label-sm text-secondary hover:underline underline-offset-4"
-                  href="#"
+                  href="/forgot-password"
                 >
                   Forgot Password?
                 </Link>
@@ -180,7 +180,7 @@ export default function LoginPage() {
             New to Nigeria&apos;s best guide?
             <Link
               className="text-secondary font-bold hover:underline underline-offset-4 ml-1"
-              href="#"
+              href="/signup"
             >
               Create Account
             </Link>

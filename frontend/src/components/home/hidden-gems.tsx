@@ -33,7 +33,7 @@ export default function HiddenGems() {
               <img
                 alt="Olumo Rock"
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuD3C4E3R7z6S0-L5Qk7E3R7z6S0-L5Qk7E3R7z6S0-L5Qk7E3R7z6S0-L5Qk7E3R7z6S0-L5Qk7E3R7z6S0-L5Qk7E3R7z6S0-L5Qk7E3R7z6S0-L5Q"
+                src="https://images.unsplash.com/photo-1504541316369-51f315861945?w=800&q=80&fit=crop"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent"></div>
               <div className="absolute bottom-0 left-0 p-6">
@@ -51,7 +51,7 @@ export default function HiddenGems() {
               <img
                 alt="Kajuru Castle"
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuD3C4E3R7z6S0-L5Qk7E3R7z6S0-L5Qk7E3R7z6S0-L5Qk7E3R7z6S0-L5Qk7E3R7z6S0-L5Qk7E3R7z6S0-L5Qk7E3R7z6S0-L5Qk7E3R7z6S0-L5Q"
+                src="https://images.unsplash.com/photo-1773325724090-e46d4838ab6f?w=800&q=80&fit=crop"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent"></div>
               <div className="absolute bottom-0 left-0 p-6">
@@ -71,7 +71,7 @@ export default function HiddenGems() {
               <img
                 alt="Gurara Falls"
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuD3C4E3R7z6S0-L5Qk7E3R7z6S0-L5Qk7E3R7z6S0-L5Qk7E3R7z6S0-L5Qk7E3R7z6S0-L5Qk7E3R7z6S0-L5Qk7E3R7z6S0-L5Qk7E3R7z6S0-L5Q"
+                src="https://images.unsplash.com/photo-1620246403639-71409c17084b?w=800&q=80&fit=crop"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent"></div>
               <div className="absolute bottom-0 left-0 p-6">

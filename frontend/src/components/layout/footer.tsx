@@ -46,7 +46,7 @@ export default function Footer() {
           <ul className="space-y-4">
             <li>
               <Link
-                href="#"
+                href="/discover"
                 className="font-body-md text-on-surface-variant dark:text-outline hover:text-secondary transition-colors"
               >
                 Destinations
@@ -54,7 +54,7 @@ export default function Footer() {
             </li>
             <li>
               <Link
-                href="#"
+                href="/ai-planner"
                 className="font-body-md text-on-surface-variant dark:text-outline hover:text-secondary transition-colors"
               >
                 AI Planner
@@ -62,7 +62,7 @@ export default function Footer() {
             </li>
             <li>
               <Link
-                href="#"
+                href="/ai-planner"
                 className="font-body-md text-on-surface-variant dark:text-outline hover:text-secondary transition-colors"
               >
                 Group Travel
@@ -70,7 +70,7 @@ export default function Footer() {
             </li>
             <li>
               <Link
-                href="#"
+                href="/itineraries"
                 className="font-body-md text-on-surface-variant dark:text-outline hover:text-secondary transition-colors"
               >
                 Itineraries
@@ -163,7 +163,7 @@ export default function Footer() {
           <ul className="space-y-4">
             <li>
               <Link
-                href="#"
+                href="/about"
                 className="font-body-md text-on-surface-variant dark:text-outline hover:text-secondary transition-colors"
               >
                 About Us
@@ -179,7 +179,7 @@ export default function Footer() {
             </li>
             <li>
               <Link
-                href="#"
+                href="/contact"
                 className="font-body-md text-on-surface-variant dark:text-outline hover:text-secondary transition-colors"
               >
                 Contact
@@ -187,7 +187,7 @@ export default function Footer() {
             </li>
             <li>
               <Link
-                href="#"
+                href="/privacy"
                 className="font-body-md text-on-surface-variant dark:text-outline hover:text-secondary transition-colors"
               >
                 Privacy

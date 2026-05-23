@@ -44,9 +44,9 @@ export default function Header() {
           })}
         </nav>
         <div className="flex items-center gap-4">
-          <button className="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors cursor-pointer">
+          <Link href="/login" className="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors cursor-pointer">
             Login
-          </button>
+          </Link>
           <Link href="/signup" className="font-label-md text-label-md bg-primary text-on-primary px-6 py-2 rounded-full hover:bg-primary/90 transition-colors cursor-pointer">
             Sign Up
           </Link>

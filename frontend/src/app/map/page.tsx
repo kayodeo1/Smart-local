@@ -1,0 +1,104 @@
+import Header from "@/components/layout/header";
+import MobileNav from "@/components/layout/mobile-nav";
+import { MOCK_ATTRACTIONS } from "@/lib/mock-data";
+import Link from "next/link";
+
+export default function MapPage() {
+  return (
+    <div className="bg-background text-on-background font-body-md antialiased min-h-screen flex flex-col relative">
+      <div className="fixed inset-0 pattern-overlay-1 pointer-events-none opacity-50 z-0" />
+
+      <Header />
+
+      <main className="flex-grow flex w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop gap-gutter h-[calc(100vh-80px)] overflow-hidden z-10 pt-28">
+        <aside className="hidden lg:flex flex-col w-80 shrink-0 gap-4 overflow-y-auto custom-scrollbar pr-2">
+          <div className="mb-2">
+            <h1 className="font-headline-lg text-headline-lg text-primary">Explore Map</h1>
+            <p className="font-body-md text-body-md text-on-surface-variant">
+              {MOCK_ATTRACTIONS.length} attractions near you
+            </p>
+          </div>
+          <div className="flex gap-2 flex-wrap mb-2">
+            {["All", "Art & Culture", "Nature & Parks", "Beaches"].map((cat) => (
+              <button
+                key={cat}
+                className={`font-label-sm text-label-sm px-3 py-1.5 rounded-full border transition-colors cursor-pointer ${
+                  cat === "All"
+                    ? "bg-primary text-on-primary border-primary"
+                    : "bg-surface text-on-surface-variant border-outline-variant hover:border-primary hover:text-primary"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+          <div className="space-y-3">
+            {MOCK_ATTRACTIONS.map((attraction) => (
+              <Link
+                key={attraction.id}
+                href={`/discover/${attraction.id}`}
+                className="group flex gap-3 p-3 rounded-xl bg-surface-container-low hover:bg-surface-container-high transition-all hover:-translate-y-0.5"
+              >
+                <div className="w-20 h-20 rounded-lg overflow-hidden shrink-0">
+                  <img
+                    alt={attraction.name}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    src={attraction.image}
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-label-md text-label-md text-primary truncate">
+                    {attraction.name}
+                  </h3>
+                  <p className="text-xs text-on-surface-variant truncate flex items-center gap-1 mt-0.5">
+                    <span className="material-symbols-outlined text-[14px]">location_on</span>
+                    {attraction.location}
+                  </p>
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <span className="text-xs font-semibold bg-secondary/10 text-secondary px-2 py-0.5 rounded-full">
+                      {attraction.matchScore || attraction.rating * 20}%
+                    </span>
+                    <span className="text-xs text-on-surface-variant">{attraction.price}</span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </aside>
+
+        <section className="flex-1 rounded-xl overflow-hidden bg-surface-container-low relative min-h-0">
+          <div className="absolute inset-0 bg-surface-container-high">
+            <div className="w-full h-full relative flex items-center justify-center">
+              <iframe
+                src="https://www.openstreetmap.org/export/embed.html?bbox=2.8%2C6.2%2C4.0%2C6.7&amp;layer=mapnik&amp;marker=6.5244%2C3.3792"
+                className="w-full h-full border-0"
+                title="Map of Lagos attractions"
+                allowFullScreen
+                loading="lazy"
+              />
+              <div className="absolute bottom-4 left-4 right-4 flex gap-2 justify-center pointer-events-none">
+                <div className="bg-surface/90 backdrop-blur-md rounded-full px-4 py-2 shadow-lg flex items-center gap-3 pointer-events-auto text-sm">
+                  <span className="material-symbols-outlined text-secondary text-[20px]">my_location</span>
+                  <span className="text-on-surface font-medium">Lagos, Nigeria</span>
+                  <span className="w-px h-4 bg-outline-variant" />
+                  <span className="text-on-surface-variant">{MOCK_ATTRACTIONS.length} pins</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <MobileNav />
+
+      <button className="fixed bottom-24 md:bottom-8 right-6 w-14 h-14 bg-secondary rounded-full flex items-center justify-center text-white shadow-lg ai-glow hover:scale-110 transition-transform z-50 cursor-pointer">
+        <span
+          className="material-symbols-outlined text-[28px]"
+          style={{ fontVariationSettings: "'FILL' 1" }}
+        >
+          auto_awesome
+        </span>
+      </button>
+    </div>
+  );
+}
