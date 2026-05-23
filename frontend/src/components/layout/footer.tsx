@@ -196,7 +196,7 @@ export default function Footer() {
           </ul>
         </div>
       </div>
-      <div className="w-full py-8 px-margin-desktop max-w-container-max mx-auto border-t border-outline-variant/10">
+      <div className="w-full py-8 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto border-t border-outline-variant/10">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="font-label-sm text-on-surface-variant">
             © 2024 Smart Local Tourism Guide. Partnered with Nigerian Tourism

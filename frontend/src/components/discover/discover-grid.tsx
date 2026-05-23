@@ -9,7 +9,7 @@ export default function DiscoverGrid() {
         <button className="flex items-center gap-2 bg-surface border border-outline-variant/50 px-4 py-2 rounded-full font-label-md text-label-md text-on-surface shadow-sm cursor-pointer">
           <span className="material-symbols-outlined text-[18px]">tune</span> Filters
         </button>
-        <div className="flex gap-2 overflow-x-auto hide-scrollbar">
+        <div className="flex gap-2 overflow-x-auto no-scrollbar">
           <button className="px-4 py-1.5 rounded-full bg-primary text-on-primary font-label-sm text-label-sm whitespace-nowrap cursor-pointer">
             Culture
           </button>

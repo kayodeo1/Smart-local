@@ -10,8 +10,8 @@ export default function MapPage() {
 
       <Header />
 
-      <main className="flex-grow flex w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop gap-gutter h-[calc(100vh-80px)] overflow-hidden z-10 pt-28">
-        <aside className="hidden lg:flex flex-col w-80 shrink-0 gap-4 overflow-y-auto custom-scrollbar pr-2">
+      <main className="flex-grow flex flex-col lg:flex-row w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop gap-gutter overflow-hidden z-10 pt-28">
+        <aside className="hidden md:flex lg:flex-col w-full lg:w-80 shrink-0 gap-4 overflow-y-auto custom-scrollbar pr-2 max-h-[calc(100vh-200px)] lg:max-h-none">
           <div className="mb-2">
             <h1 className="font-headline-lg text-headline-lg text-primary">Explore Map</h1>
             <p className="font-body-md text-body-md text-on-surface-variant">
@@ -56,7 +56,7 @@ export default function MapPage() {
                   </p>
                   <div className="flex items-center gap-2 mt-1.5">
                     <span className="text-xs font-semibold bg-secondary/10 text-secondary px-2 py-0.5 rounded-full">
-                      {attraction.matchScore || attraction.rating * 20}%
+                      {attraction.matchScore || Math.round(attraction.rating * 20)}%
                     </span>
                     <span className="text-xs text-on-surface-variant">{attraction.price}</span>
                   </div>
@@ -66,9 +66,9 @@ export default function MapPage() {
           </div>
         </aside>
 
-        <section className="flex-1 rounded-xl overflow-hidden bg-surface-container-low relative min-h-0">
-          <div className="absolute inset-0 bg-surface-container-high">
-            <div className="w-full h-full relative flex items-center justify-center">
+        <section className="flex-1 rounded-xl overflow-hidden bg-surface-container-low relative min-h-0 flex flex-col">
+          <div className="flex-1 bg-surface-container-high relative min-h-[300px] lg:min-h-0">
+            <div className="absolute inset-0 flex items-center justify-center">
               <iframe
                 src="https://www.openstreetmap.org/export/embed.html?bbox=2.8%2C6.2%2C4.0%2C6.7&amp;layer=mapnik&amp;marker=6.5244%2C3.3792"
                 className="w-full h-full border-0"
@@ -85,6 +85,30 @@ export default function MapPage() {
                 </div>
               </div>
             </div>
+          </div>
+
+          <div className="md:hidden flex gap-3 overflow-x-auto snap-x snap-mandatory no-scrollbar p-3 bg-surface-container-low">
+            {MOCK_ATTRACTIONS.map((attraction) => (
+              <Link
+                key={attraction.id}
+                href={`/discover/${attraction.id}`}
+                className="snap-start shrink-0 w-48 group"
+              >
+                <div className="rounded-xl overflow-hidden bg-surface shadow-sm">
+                  <div className="h-24 overflow-hidden">
+                    <img
+                      alt={attraction.name}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      src={attraction.image}
+                    />
+                  </div>
+                  <div className="p-2.5">
+                    <h4 className="font-label-sm text-label-sm text-primary truncate">{attraction.name}</h4>
+                    <p className="text-[11px] text-on-surface-variant truncate">{attraction.location}</p>
+                  </div>
+                </div>
+              </Link>
+            ))}
           </div>
         </section>
       </main>

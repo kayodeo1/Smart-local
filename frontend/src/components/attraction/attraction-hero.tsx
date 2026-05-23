@@ -3,7 +3,7 @@ import { AttractionData } from "@/lib/mock-data";
 export default function AttractionHero({ attraction }: { attraction: AttractionData }) {
   return (
     <section
-      className="relative w-full rounded-xl overflow-hidden shadow-lg h-[614px] min-h-[400px] flex flex-col justify-end p-8"
+      className="relative w-full rounded-xl overflow-hidden shadow-lg h-[400px] md:h-[614px] flex flex-col justify-end p-6 md:p-8"
       style={{
         backgroundImage: `url('${attraction.image}')`,
         backgroundSize: "cover",

@@ -50,7 +50,7 @@ export default function AttractionCard({ attraction }: { attraction: AttractionD
         </p>
 
         <div className="mt-auto flex items-center justify-between">
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             {attraction.tags.map((tag) => (
               <span
                 key={tag}

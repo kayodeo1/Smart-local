@@ -1,5 +1,6 @@
 import Header from "@/components/layout/header";
 import MobileNav from "@/components/layout/mobile-nav";
+import Footer from "@/components/layout/footer";
 
 export default function AIPlannerPage() {
   return (
@@ -20,7 +21,7 @@ export default function AIPlannerPage() {
               </div>
             </div>
             {/* Chat Area */}
-            <div className="flex-1 overflow-y-auto flex flex-col gap-4 pr-2 mb-4 hide-scrollbar">
+            <div className="flex-1 overflow-y-auto flex flex-col gap-4 pr-2 mb-4 no-scrollbar">
               {/* User Message */}
               <div className="self-end bg-surface-container rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%]">
                 <p className="font-body-md text-body-md text-on-surface">Plan a 1-day culture tour in Lagos under ₦30,000</p>
@@ -198,6 +199,7 @@ export default function AIPlannerPage() {
         </section>
       </main>
 
+      <Footer />
       <MobileNav />
     </div>
   );

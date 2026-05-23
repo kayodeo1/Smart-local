@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Header from "@/components/layout/header";
 import MobileNav from "@/components/layout/mobile-nav";
+import Footer from "@/components/layout/footer";
 import AttractionHero from "@/components/attraction/attraction-hero";
 import AIInsights from "@/components/attraction/ai-insights";
 import EssentialInfo from "@/components/attraction/essential-info";
@@ -35,6 +36,7 @@ export default async function AttractionPage({
         ) : null}
       </main>
 
+      <Footer />
       <MobileNav />
 
       {/* Floating AI Widget */}

@@ -1,5 +1,6 @@
 import Header from "@/components/layout/header";
 import MobileNav from "@/components/layout/mobile-nav";
+import Footer from "@/components/layout/footer";
 import Link from "next/link";
 
 const MOCK_ITINERARIES = [
@@ -139,6 +140,7 @@ export default function ItinerariesPage() {
         )}
       </main>
 
+      <Footer />
       <MobileNav />
 
       <button className="fixed bottom-24 md:bottom-8 right-6 w-14 h-14 bg-secondary rounded-full flex items-center justify-center text-white shadow-lg ai-glow hover:scale-110 transition-transform z-50 cursor-pointer">

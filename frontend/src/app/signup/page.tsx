@@ -106,11 +106,11 @@ export default function SignupPage() {
         <div className="max-w-md w-full mx-auto">
           {/* Mobile Branding */}
           <div className="flex items-center gap-2 mb-10 lg:hidden">
-            <Link href="/">
+            <Link href="/" className="flex items-center gap-2 whitespace-nowrap">
               <span className="material-symbols-outlined text-secondary text-3xl">
                 explore
               </span>
-              <span className="font-headline-md text-headline-md font-bold text-primary tracking-tight ml-2">
+              <span className="font-headline-md text-headline-md font-bold text-primary tracking-tight">
                 Smart Local
               </span>
             </Link>

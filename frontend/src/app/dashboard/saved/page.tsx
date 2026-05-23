@@ -1,5 +1,6 @@
 import Header from "@/components/layout/header";
 import DashboardSidebar from "@/components/layout/dashboard-sidebar";
+import MobileNav from "@/components/layout/mobile-nav";
 import { MOCK_ATTRACTIONS } from "@/lib/mock-data";
 import Link from "next/link";
 
@@ -85,26 +86,7 @@ export default function DashboardSavedPage() {
         </div>
       </main>
 
-      <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-3 md:hidden bg-surface/80 backdrop-blur-2xl border-t border-white/40 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] rounded-t-lg">
-        <Link className="flex flex-col items-center justify-center text-on-surface-variant" href="/">
-          <span className="material-symbols-outlined">home</span>
-          <span className="font-label-sm text-label-sm">Home</span>
-        </Link>
-        <Link className="flex flex-col items-center justify-center text-on-surface-variant" href="/discover">
-          <span className="material-symbols-outlined">explore</span>
-          <span className="font-label-sm text-label-sm">Explore</span>
-        </Link>
-        <Link className="flex flex-col items-center justify-center text-on-surface-variant" href="/ai-planner">
-          <span className="material-symbols-outlined">smart_toy</span>
-          <span className="font-label-sm text-label-sm">AI Guide</span>
-        </Link>
-        <Link className="flex flex-col items-center justify-center text-on-secondary-container bg-secondary-container/50 rounded-full px-4 py-1" href="/dashboard">
-          <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
-            person
-          </span>
-          <span className="font-label-sm text-label-sm">Profile</span>
-        </Link>
-      </nav>
+      <MobileNav />
     </div>
   );
 }
