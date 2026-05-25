@@ -1,10 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
 
 export default function Header() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, loading, signOut } = useAuth();
 
   const navLinks = [
     { label: "Home", href: "/" },
@@ -13,6 +16,17 @@ export default function Header() {
     { label: "Map", href: "/map" },
     { label: "AI Planner", href: "/ai-planner" },
   ];
+
+  async function handleSignOut() {
+    await signOut();
+    router.push("/");
+  }
+
+  const displayName =
+    (user?.user_metadata?.full_name as string) ||
+    (user?.user_metadata?.name as string) ||
+    user?.email?.split("@")[0] ||
+    "Account";
 
   return (
     <header className="fixed top-0 w-full z-50 bg-surface/60 dark:bg-surface-container/60 backdrop-blur-lg border-b border-white/40 dark:border-outline-variant/20 shadow-sm transition-all duration-300 hidden md:block">
@@ -44,12 +58,45 @@ export default function Header() {
           })}
         </nav>
         <div className="flex items-center gap-4">
-          <Link href="/login" className="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors cursor-pointer">
-            Login
-          </Link>
-          <Link href="/signup" className="font-label-md text-label-md bg-primary text-on-primary px-6 py-2 rounded-full hover:bg-primary/90 transition-colors cursor-pointer">
-            Sign Up
-          </Link>
+          {loading ? (
+            <div className="w-24 h-8 rounded-full bg-surface-container-low animate-pulse" />
+          ) : user ? (
+            <>
+              <Link
+                href="/dashboard"
+                className="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors cursor-pointer"
+              >
+                Dashboard
+              </Link>
+              <Link
+                href="/profile"
+                className="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors cursor-pointer max-w-[140px] truncate"
+              >
+                {displayName}
+              </Link>
+              <button
+                onClick={handleSignOut}
+                className="font-label-md text-label-md bg-primary text-on-primary px-6 py-2 rounded-full hover:bg-primary/90 transition-colors cursor-pointer"
+              >
+                Log Out
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors cursor-pointer"
+              >
+                Login
+              </Link>
+              <Link
+                href="/signup"
+                className="font-label-md text-label-md bg-primary text-on-primary px-6 py-2 rounded-full hover:bg-primary/90 transition-colors cursor-pointer"
+              >
+                Sign Up
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </header>

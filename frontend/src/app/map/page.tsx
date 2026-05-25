@@ -1,13 +1,42 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import Header from "@/components/layout/header";
 import MobileNav from "@/components/layout/mobile-nav";
-import { MOCK_ATTRACTIONS } from "@/lib/mock-data";
-import Link from "next/link";
+import { api } from "@/lib/api";
+import type { AttractionList } from "@/lib/types";
 
 export default function MapPage() {
+  const [attractions, setAttractions] = useState<AttractionList[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeCategory, setActiveCategory] = useState("All");
+
+  useEffect(() => {
+    api.attractions
+      .list({ page_size: "100" })
+      .then((d) => setAttractions(d.results))
+      .catch(() => setAttractions([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const categories = useMemo(() => {
+    const names = new Set<string>();
+    attractions.forEach((a) => a.category?.name && names.add(a.category.name));
+    return ["All", ...Array.from(names)];
+  }, [attractions]);
+
+  const visible = useMemo(
+    () =>
+      activeCategory === "All"
+        ? attractions
+        : attractions.filter((a) => a.category?.name === activeCategory),
+    [attractions, activeCategory],
+  );
+
   return (
     <div className="bg-background text-on-background font-body-md antialiased min-h-screen flex flex-col relative">
       <div className="fixed inset-0 pattern-overlay-1 pointer-events-none opacity-50 z-0" />
-
       <Header />
 
       <main className="flex-grow flex flex-col lg:flex-row w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop gap-gutter overflow-hidden z-10 pt-28">
@@ -15,25 +44,28 @@ export default function MapPage() {
           <div className="mb-2">
             <h1 className="font-headline-lg text-headline-lg text-primary">Explore Map</h1>
             <p className="font-body-md text-body-md text-on-surface-variant">
-              {MOCK_ATTRACTIONS.length} attractions near you
+              {loading ? "Loading…" : `${attractions.length} attractions to explore`}
             </p>
           </div>
-          <div className="flex gap-2 flex-wrap mb-2">
-            {["All", "Art & Culture", "Nature & Parks", "Beaches"].map((cat) => (
-              <button
-                key={cat}
-                className={`font-label-sm text-label-sm px-3 py-1.5 rounded-full border transition-colors cursor-pointer ${
-                  cat === "All"
-                    ? "bg-primary text-on-primary border-primary"
-                    : "bg-surface text-on-surface-variant border-outline-variant hover:border-primary hover:text-primary"
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
+          {categories.length > 1 && (
+            <div className="flex gap-2 flex-wrap mb-2">
+              {categories.slice(0, 6).map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setActiveCategory(cat)}
+                  className={`font-label-sm text-label-sm px-3 py-1.5 rounded-full border transition-colors cursor-pointer ${
+                    cat === activeCategory
+                      ? "bg-primary text-on-primary border-primary"
+                      : "bg-surface text-on-surface-variant border-outline-variant hover:border-primary hover:text-primary"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          )}
           <div className="space-y-3">
-            {MOCK_ATTRACTIONS.map((attraction) => (
+            {visible.map((attraction) => (
               <Link
                 key={attraction.id}
                 href={`/discover/${attraction.id}`}
@@ -55,10 +87,13 @@ export default function MapPage() {
                     {attraction.location}
                   </p>
                   <div className="flex items-center gap-2 mt-1.5">
-                    <span className="text-xs font-semibold bg-secondary/10 text-secondary px-2 py-0.5 rounded-full">
-                      {attraction.matchScore || Math.round(attraction.rating * 20)}%
+                    <span className="text-xs font-semibold bg-secondary/10 text-secondary px-2 py-0.5 rounded-full flex items-center gap-0.5">
+                      <span className="material-symbols-outlined text-[12px]">star</span>
+                      {attraction.rating}
                     </span>
-                    <span className="text-xs text-on-surface-variant">{attraction.price}</span>
+                    <span className="text-xs text-on-surface-variant">
+                      {attraction.price_display}
+                    </span>
                   </div>
                 </div>
               </Link>
@@ -78,17 +113,19 @@ export default function MapPage() {
               />
               <div className="absolute bottom-4 left-4 right-4 flex gap-2 justify-center pointer-events-none">
                 <div className="bg-surface/90 backdrop-blur-md rounded-full px-4 py-2 shadow-lg flex items-center gap-3 pointer-events-auto text-sm">
-                  <span className="material-symbols-outlined text-secondary text-[20px]">my_location</span>
-                  <span className="text-on-surface font-medium">Lagos, Nigeria</span>
+                  <span className="material-symbols-outlined text-secondary text-[20px]">
+                    my_location
+                  </span>
+                  <span className="text-on-surface font-medium">Nigeria</span>
                   <span className="w-px h-4 bg-outline-variant" />
-                  <span className="text-on-surface-variant">{MOCK_ATTRACTIONS.length} pins</span>
+                  <span className="text-on-surface-variant">{visible.length} pins</span>
                 </div>
               </div>
             </div>
           </div>
 
           <div className="md:hidden flex gap-3 overflow-x-auto snap-x snap-mandatory no-scrollbar p-3 bg-surface-container-low">
-            {MOCK_ATTRACTIONS.map((attraction) => (
+            {visible.map((attraction) => (
               <Link
                 key={attraction.id}
                 href={`/discover/${attraction.id}`}
@@ -103,8 +140,12 @@ export default function MapPage() {
                     />
                   </div>
                   <div className="p-2.5">
-                    <h4 className="font-label-sm text-label-sm text-primary truncate">{attraction.name}</h4>
-                    <p className="text-[11px] text-on-surface-variant truncate">{attraction.location}</p>
+                    <h4 className="font-label-sm text-label-sm text-primary truncate">
+                      {attraction.name}
+                    </h4>
+                    <p className="text-[11px] text-on-surface-variant truncate">
+                      {attraction.location}
+                    </p>
                   </div>
                 </div>
               </Link>
@@ -115,14 +156,17 @@ export default function MapPage() {
 
       <MobileNav />
 
-      <button className="fixed bottom-24 md:bottom-8 right-6 w-14 h-14 bg-secondary rounded-full flex items-center justify-center text-white shadow-lg ai-glow hover:scale-110 transition-transform z-50 cursor-pointer">
+      <Link
+        href="/ai-planner"
+        className="fixed bottom-24 md:bottom-8 right-6 w-14 h-14 bg-secondary rounded-full flex items-center justify-center text-white shadow-lg ai-glow hover:scale-110 transition-transform z-50 cursor-pointer"
+      >
         <span
           className="material-symbols-outlined text-[28px]"
           style={{ fontVariationSettings: "'FILL' 1" }}
         >
           auto_awesome
         </span>
-      </button>
+      </Link>
     </div>
   );
 }

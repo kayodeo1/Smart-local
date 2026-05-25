@@ -1,7 +1,10 @@
-import { AIInsights as AIInsightsType } from "@/lib/mock-data";
+interface Props {
+  bestTime?: string;
+  dontMiss?: string;
+}
 
-export default function AIInsights({ insights }: { insights?: AIInsightsType }) {
-  if (!insights) return null;
+export default function AIInsights({ bestTime, dontMiss }: Props) {
+  if (!bestTime && !dontMiss) return null;
 
   return (
     <div className="md:col-span-8 glass-panel rounded-xl p-8 shadow-sm flex flex-col gap-6">
@@ -16,27 +19,27 @@ export default function AIInsights({ insights }: { insights?: AIInsightsType }) 
           </p>
         </div>
       </div>
-      
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <div className="bg-surface-container-low rounded-lg p-5 border border-white/50">
-          <h3 className="font-label-md text-label-md text-primary flex items-center gap-2 mb-2">
-            <span className="material-symbols-outlined text-secondary">schedule</span>
-            Best Time to Visit
-          </h3>
-          <p className="font-body-md text-body-md text-on-surface-variant">
-            {insights.bestTime}
-          </p>
-        </div>
-        
-        <div className="bg-surface-container-low rounded-lg p-5 border border-white/50">
-          <h3 className="font-label-md text-label-md text-primary flex items-center gap-2 mb-2">
-            <span className="material-symbols-outlined text-secondary">palette</span>
-            Don&apos;t Miss
-          </h3>
-          <p className="font-body-md text-body-md text-on-surface-variant">
-            {insights.dontMiss}
-          </p>
-        </div>
+        {bestTime && (
+          <div className="bg-surface-container-low rounded-lg p-5 border border-white/50">
+            <h3 className="font-label-md text-label-md text-primary flex items-center gap-2 mb-2">
+              <span className="material-symbols-outlined text-secondary">schedule</span>
+              Best Time to Visit
+            </h3>
+            <p className="font-body-md text-body-md text-on-surface-variant">{bestTime}</p>
+          </div>
+        )}
+
+        {dontMiss && (
+          <div className="bg-surface-container-low rounded-lg p-5 border border-white/50">
+            <h3 className="font-label-md text-label-md text-primary flex items-center gap-2 mb-2">
+              <span className="material-symbols-outlined text-secondary">palette</span>
+              Don&apos;t Miss
+            </h3>
+            <p className="font-body-md text-body-md text-on-surface-variant">{dontMiss}</p>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,23 +1,44 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 
 export default function SignupPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
-    // Simulate API call
-    setTimeout(() => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { name: fullName, full_name: fullName } },
+    });
+    if (error) {
+      toast.error(error.message);
       setIsSubmitting(false);
-      setIsSuccess(true);
-    }, 1500);
+      return;
+    }
+    setIsSuccess(true);
+    setTimeout(() => router.push("/dashboard"), 1500);
   };
+
+  async function handleGoogleSignup() {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/auth/callback?next=/dashboard` },
+    });
+    if (error) toast.error(error.message);
+  }
 
   return (
     <main className="flex min-h-screen overflow-hidden bg-surface text-on-surface">
@@ -126,7 +147,7 @@ export default function SignupPage() {
           </div>
           {/* Social Signups */}
           <div className="grid grid-cols-2 gap-4 mb-8">
-            <button className="flex items-center justify-center gap-3 px-6 py-3 bg-surface-container rounded-lg border border-outline-variant hover:bg-surface-container-high transition-colors group cursor-pointer">
+            <button type="button" onClick={handleGoogleSignup} className="flex items-center justify-center gap-3 px-6 py-3 bg-surface-container rounded-lg border border-outline-variant hover:bg-surface-container-high transition-colors group cursor-pointer">
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -181,6 +202,8 @@ export default function SignupPage() {
                   placeholder="John Doe"
                   required
                   type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
                 />
               </div>
             </div>
@@ -202,6 +225,8 @@ export default function SignupPage() {
                   placeholder="name@example.com"
                   required
                   type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
             </div>
@@ -223,6 +248,8 @@ export default function SignupPage() {
                   placeholder="Min. 8 characters"
                   required
                   type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
                 <button
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface cursor-pointer"

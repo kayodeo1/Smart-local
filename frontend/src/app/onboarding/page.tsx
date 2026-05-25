@@ -1,15 +1,33 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import Step1Interests from "@/components/onboarding/step-1-interests";
 import Step2Rhythm from "@/components/onboarding/step-2-rhythm";
 import Step3Logistics from "@/components/onboarding/step-3-logistics";
 import LoadingScreen from "@/components/onboarding/loading-screen";
+import { useRequireAuth } from "@/lib/use-require-auth";
+import { api } from "@/lib/api";
+
+// Map onboarding UI values to the backend's accepted preference choices.
+const BUDGET_MAP: Record<string, string> = { low: "budget", medium: "mid", high: "luxury" };
+const TIME_MAP: Record<string, string> = {
+  half: "half_day",
+  full: "full_day",
+  multi: "weekend",
+};
+const STYLE_MAP: Record<string, string> = {
+  Solo: "explorer",
+  Couple: "relaxer",
+  Family: "cultural",
+  Group: "adventurer",
+};
 
 export default function OnboardingPage() {
+  const { user, loading } = useRequireAuth();
   const [step, setStep] = useState(1);
+  const [saving, setSaving] = useState(false);
 
-  // Form State
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [budget, setBudget] = useState<string | null>(null);
   const [travelStyle, setTravelStyle] = useState<string | null>(null);
@@ -18,19 +36,54 @@ export default function OnboardingPage() {
   const [transports, setTransports] = useState<string[]>([]);
   const [access, setAccess] = useState<string[]>([]);
 
-  const handleNext = () => setStep((prev) => prev + 1);
   const handleBack = () => setStep((prev) => prev - 1);
+
+  async function handleFinish() {
+    setSaving(true);
+    try {
+      await api.users.updatePreferences({
+        interests: selectedInterests,
+        budget: budget ? BUDGET_MAP[budget] ?? "budget" : "budget",
+        travel_style: travelStyle ? STYLE_MAP[travelStyle] ?? "explorer" : "explorer",
+        activities,
+        time_availability: time ? TIME_MAP[time] ?? "full_day" : "full_day",
+        transport_modes: transports,
+        accessibility_needs: access,
+      });
+    } catch {
+      toast.error("Could not save preferences, but you can update them later.");
+    } finally {
+      setSaving(false);
+      setStep(4);
+    }
+  }
+
+  const handleNext = () => {
+    if (step === 3) {
+      handleFinish();
+    } else {
+      setStep((prev) => prev + 1);
+    }
+  };
+
+  if (loading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-surface">
+        <span className="material-symbols-outlined text-secondary animate-spin text-4xl">
+          progress_activity
+        </span>
+      </div>
+    );
+  }
 
   if (step === 4) {
     return <LoadingScreen />;
   }
 
-  // Calculate Progress (3 steps)
   const progress = Math.round((step / 3) * 100);
 
   return (
     <main className="bg-surface text-on-surface antialiased min-h-screen flex flex-col relative overflow-x-hidden">
-      {/* Background Decorators */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute inset-0 pattern-bg-dots-lg opacity-10"></div>
         <div className="absolute -top-24 -right-24 w-96 h-96 bg-secondary/10 blur-[120px] rounded-full pointer-events-none"></div>
@@ -38,7 +91,6 @@ export default function OnboardingPage() {
       </div>
 
       <div className="flex-grow z-10 flex flex-col items-center justify-center py-12 px-margin-mobile md:px-margin-desktop w-full max-w-container-max mx-auto relative">
-        {/* Top App Bar */}
         <header className="w-full flex justify-between items-center mb-12">
           <div className="font-headline-md text-headline-md font-bold text-primary tracking-tight">
             Smart Local
@@ -51,10 +103,7 @@ export default function OnboardingPage() {
           </button>
         </header>
 
-        {/* Onboarding Container */}
         <div className="glass-panel rounded-xl w-full max-w-2xl p-6 md:p-10 shadow-lg relative overflow-hidden transition-all duration-500">
-          
-          {/* Progress Indicator */}
           <div className="mb-8">
             <div className="flex justify-between items-center mb-2">
               <span className="font-label-sm text-label-sm text-on-surface-variant">
@@ -72,7 +121,6 @@ export default function OnboardingPage() {
             </div>
           </div>
 
-          {/* Dynamic Step Content */}
           <div className="min-h-[400px]">
             {step === 1 && (
               <Step1Interests
@@ -102,7 +150,6 @@ export default function OnboardingPage() {
             )}
           </div>
 
-          {/* Navigation Controls */}
           <div className="flex justify-between items-center mt-8 border-t border-outline-variant/20 pt-6">
             <button
               onClick={handleBack}
@@ -117,9 +164,10 @@ export default function OnboardingPage() {
             </button>
             <button
               onClick={handleNext}
-              className="bg-primary text-on-primary rounded-full px-8 py-3 font-label-md text-label-md hover:opacity-90 active:scale-[0.98] transition-all flex items-center gap-2 shadow-sm cursor-pointer"
+              disabled={saving}
+              className="bg-primary text-on-primary rounded-full px-8 py-3 font-label-md text-label-md hover:opacity-90 active:scale-[0.98] transition-all flex items-center gap-2 shadow-sm cursor-pointer disabled:opacity-60"
             >
-              {step === 3 ? "Finish Setup" : "Continue"}
+              {saving ? "Saving…" : step === 3 ? "Finish Setup" : "Continue"}
               <span className="material-symbols-outlined text-sm">
                 {step === 3 ? "celebration" : "arrow_forward"}
               </span>

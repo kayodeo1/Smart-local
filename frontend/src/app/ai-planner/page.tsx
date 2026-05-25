@@ -1,201 +1,380 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import Header from "@/components/layout/header";
 import MobileNav from "@/components/layout/mobile-nav";
 import Footer from "@/components/layout/footer";
+import { useRequireAuth } from "@/lib/use-require-auth";
+import { api } from "@/lib/api";
+import type { ChatMessage, GeneratedItinerary } from "@/lib/types";
+
+const GREETING: ChatMessage = {
+  role: "assistant",
+  content:
+    "Hi! I'm your Nigerian travel assistant. Tell me where you'd like to go and what you enjoy, and I'll help you plan. Or use the panel on the right to generate a full itinerary.",
+};
+
+const VISIT_ICONS: Record<string, string> = {
+  morning: "wb_twilight",
+  afternoon: "wb_sunny",
+  evening: "nights_stay",
+  night: "bedtime",
+  flexible: "schedule",
+};
+
+// Strip any stray Markdown the model might still emit (bold markers, bullets, headers).
+function cleanText(text: string): string {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, "$1")
+    .replace(/__(.*?)__/g, "$1")
+    .replace(/(^|\n)\s*[*-]\s+/g, "$1• ")
+    .replace(/(^|\n)#{1,6}\s*/g, "$1")
+    .replace(/\*/g, "")
+    .trim();
+}
 
 export default function AIPlannerPage() {
+  const { user, loading } = useRequireAuth();
+  const router = useRouter();
+
+  const [messages, setMessages] = useState<ChatMessage[]>([GREETING]);
+  const [input, setInput] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  const [destination, setDestination] = useState("Lagos");
+  const [days, setDays] = useState(1);
+  const [notes, setNotes] = useState("");
+  const [generated, setGenerated] = useState<GeneratedItinerary | null>(null);
+  const [generating, setGenerating] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  async function handleSend(e?: React.FormEvent) {
+    e?.preventDefault();
+    const text = input.trim();
+    if (!text || chatLoading) return;
+    const next = [...messages, { role: "user" as const, content: text }];
+    setMessages(next);
+    setInput("");
+    setChatLoading(true);
+    try {
+      const reply = await api.ai.chat(
+        next.filter((m) => m.role !== "assistant" || m !== GREETING),
+        { destination },
+      );
+      setMessages((m) => [...m, { role: "assistant", content: reply.content }]);
+    } catch (err) {
+      setMessages((m) => [
+        ...m,
+        {
+          role: "assistant",
+          content: "Sorry, I couldn't process that right now. Please try again.",
+        },
+      ]);
+      toast.error(err instanceof Error ? err.message : "Chat failed");
+    } finally {
+      setChatLoading(false);
+    }
+  }
+
+  async function handleGenerate() {
+    if (!destination.trim() || generating) return;
+    setGenerating(true);
+    setGenerated(null);
+    try {
+      const result = await api.ai.generateItinerary({
+        destination: destination.trim(),
+        duration_days: days,
+        preferences: notes.trim() ? { notes: notes.trim() } : {},
+      });
+      setGenerated(result);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not generate itinerary");
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  async function handleSave() {
+    if (!generated || saving) return;
+    setSaving(true);
+    try {
+      const created = await api.itineraries.create({
+        title: generated.title,
+        destination: generated.destination,
+        duration: generated.duration,
+        total_budget: generated.total_budget,
+        cover_image: generated.cover_image,
+      });
+      for (const [i, stop] of generated.stops.entries()) {
+        await api.itineraries.addStop(created.id, {
+          title: stop.title,
+          location: stop.location,
+          category: stop.category,
+          visit_time: ["morning", "afternoon", "evening", "night"].includes(stop.visit_time)
+            ? stop.visit_time
+            : "flexible",
+          duration: stop.duration,
+          estimated_cost: stop.estimated_cost,
+          description: stop.description,
+          order: stop.order ?? i,
+        });
+      }
+      toast.success("Itinerary saved!");
+      router.push(`/itineraries/${created.id}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not save itinerary");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-surface">
+        <span className="material-symbols-outlined text-secondary animate-spin text-4xl">
+          progress_activity
+        </span>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-surface text-on-surface font-body-md antialiased min-h-screen flex flex-col relative overflow-x-hidden">
       <Header />
-      
+
       <main className="flex-1 w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-8 flex flex-col lg:flex-row gap-gutter pattern-overlay pt-24">
-        {/* AI Travel Assistant Sidebar */}
-        <aside className="w-full lg:w-1/3 flex flex-col gap-6 sticky top-28 h-[calc(100vh-140px)]">
-          <div className="glass-card rounded-xl p-6 flex flex-col h-full shadow-sm">
+        {/* Chat assistant */}
+        <aside className="w-full lg:w-1/3 flex flex-col gap-6 lg:sticky lg:top-28 lg:h-[calc(100vh-140px)]">
+          <div className="glass-card rounded-xl p-6 flex flex-col h-full shadow-sm min-h-[500px]">
             <div className="flex items-center gap-3 mb-6 pb-4 border-b border-outline-variant/30">
               <div className="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container">
-                <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>psychology</span>
+                <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  psychology
+                </span>
               </div>
               <div>
                 <h2 className="font-headline-md text-headline-md text-on-surface">AI Travel Assistant</h2>
-                <p className="font-label-sm text-label-sm text-on-surface-variant">Your local guide in Lagos</p>
+                <p className="font-label-sm text-label-sm text-on-surface-variant">
+                  Your local guide in {destination}
+                </p>
               </div>
             </div>
-            {/* Chat Area */}
+
             <div className="flex-1 overflow-y-auto flex flex-col gap-4 pr-2 mb-4 no-scrollbar">
-              {/* User Message */}
-              <div className="self-end bg-surface-container rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%]">
-                <p className="font-body-md text-body-md text-on-surface">Plan a 1-day culture tour in Lagos under ₦30,000</p>
-              </div>
-              {/* AI Response */}
-              <div className="self-start flex gap-3 max-w-[90%]">
-                <div className="w-8 h-8 rounded-full bg-secondary-container shrink-0 flex items-center justify-center text-on-secondary-container mt-1">
-                  <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>psychology</span>
-                </div>
-                <div className="bg-surface-bright border border-outline-variant/30 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
-                  <p className="font-body-md text-body-md text-on-surface mb-2">I&apos;ve crafted a 1-day cultural deep-dive in Lagos for you, staying comfortably within your ₦30,000 budget.</p>
-                  <p className="font-body-md text-body-md text-on-surface">We&apos;ll start at the Nike Art Gallery, grab some local food, and end at Freedom Park. How does this look?</p>
-                  {/* AI Suggestion Pills */}
-                  <div className="flex flex-wrap gap-2 mt-4">
-                    <button className="font-label-sm text-label-sm bg-surface-container hover:bg-surface-variant text-on-surface px-3 py-1.5 rounded-full transition-colors cursor-pointer">Add more food stops</button>
-                    <button className="font-label-sm text-label-sm bg-surface-container hover:bg-surface-variant text-on-surface px-3 py-1.5 rounded-full transition-colors cursor-pointer">Make it cheaper</button>
+              {messages.map((m, i) =>
+                m.role === "user" ? (
+                  <div
+                    key={i}
+                    className="self-end bg-surface-container rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%]"
+                  >
+                    <p className="font-body-md text-body-md text-on-surface whitespace-pre-wrap">
+                      {m.content}
+                    </p>
+                  </div>
+                ) : (
+                  <div key={i} className="self-start flex gap-3 max-w-[90%]">
+                    <div className="w-8 h-8 rounded-full bg-secondary-container shrink-0 flex items-center justify-center text-on-secondary-container mt-1">
+                      <span
+                        className="material-symbols-outlined text-sm"
+                        style={{ fontVariationSettings: "'FILL' 1" }}
+                      >
+                        psychology
+                      </span>
+                    </div>
+                    <div className="bg-surface-bright border border-outline-variant/30 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
+                      <p className="font-body-md text-body-md text-on-surface whitespace-pre-wrap">
+                        {cleanText(m.content)}
+                      </p>
+                    </div>
+                  </div>
+                ),
+              )}
+              {chatLoading && (
+                <div className="self-start flex gap-3">
+                  <div className="w-8 h-8 rounded-full bg-secondary-container shrink-0 flex items-center justify-center text-on-secondary-container mt-1">
+                    <span className="material-symbols-outlined text-sm animate-spin">
+                      progress_activity
+                    </span>
+                  </div>
+                  <div className="bg-surface-bright border border-outline-variant/30 rounded-2xl rounded-tl-sm px-4 py-3 text-on-surface-variant text-sm">
+                    Thinking…
                   </div>
                 </div>
-              </div>
+              )}
+              <div ref={chatEndRef} />
             </div>
-            {/* Input Area */}
-            <div className="relative mt-auto">
-              <input className="w-full bg-surface-container-highest border-0 rounded-full py-4 pl-6 pr-14 font-body-md text-body-md text-on-surface focus:ring-2 focus:ring-secondary focus:outline-none placeholder-on-surface-variant transition-all" placeholder="Ask for changes or new ideas..." type="text" />
-              <button className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center hover:bg-primary/90 transition-colors cursor-pointer">
-                <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>send</span>
+
+            <form onSubmit={handleSend} className="relative mt-auto">
+              <input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                className="w-full bg-surface-container-highest border-0 rounded-full py-4 pl-6 pr-14 font-body-md text-body-md text-on-surface focus:ring-2 focus:ring-secondary focus:outline-none placeholder-on-surface-variant transition-all"
+                placeholder="Ask about places, food, transport…"
+                type="text"
+              />
+              <button
+                type="submit"
+                disabled={chatLoading}
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center hover:bg-primary/90 transition-colors cursor-pointer disabled:opacity-60"
+              >
+                <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  send
+                </span>
               </button>
-            </div>
+            </form>
           </div>
         </aside>
 
-        {/* Main Timeline Area */}
+        {/* Generator + timeline */}
         <section className="w-full lg:w-2/3 flex flex-col gap-6">
-          {/* Trip Header & Widgets */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
-            <div>
-              <h1 className="font-display-lg-mobile md:font-display-lg text-on-surface">Lagos Culture Day</h1>
-              <p className="font-body-md text-body-md text-on-surface-variant mt-1">1 Day • 3 Locations • Est. ₦24,500</p>
+          <div className="glass-card rounded-xl p-6">
+            <h1 className="font-display-lg-mobile md:font-display-lg text-on-surface mb-1">
+              AI Trip Planner
+            </h1>
+            <p className="font-body-md text-body-md text-on-surface-variant mb-6">
+              Generate a personalised day-by-day itinerary, then save it to your trips.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-end">
+              <div className="flex-1">
+                <label className="font-label-sm text-label-sm text-on-surface-variant ml-1 mb-1 block">
+                  Destination
+                </label>
+                <input
+                  value={destination}
+                  onChange={(e) => setDestination(e.target.value)}
+                  placeholder="e.g. Lagos, Abuja, Calabar"
+                  className="w-full bg-surface-container-highest border-0 rounded-full py-3 px-5 font-body-md text-body-md focus:ring-2 focus:ring-secondary focus:outline-none"
+                />
+              </div>
+              <div className="w-full sm:w-28">
+                <label className="font-label-sm text-label-sm text-on-surface-variant ml-1 mb-1 block">
+                  Days
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  max={14}
+                  value={days}
+                  onChange={(e) => setDays(Math.max(1, Math.min(14, Number(e.target.value) || 1)))}
+                  className="w-full bg-surface-container-highest border-0 rounded-full py-3 px-5 font-body-md text-body-md focus:ring-2 focus:ring-secondary focus:outline-none"
+                />
+              </div>
             </div>
-            <div className="flex gap-3">
-              <button className="glass-card flex items-center gap-2 px-4 py-2 rounded-full hover:bg-white/80 dark:hover:bg-black/50 transition-colors cursor-pointer">
-                <span className="material-symbols-outlined text-on-surface-variant">tune</span>
-                <span className="font-label-md text-label-md text-on-surface">Settings</span>
-              </button>
-              <button className="bg-secondary-container text-on-secondary-container ai-glow flex items-center gap-2 px-5 py-2 rounded-full hover:bg-secondary-fixed transition-colors font-label-md text-label-md cursor-pointer">
-                <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
-                <span>Auto-Optimize</span>
+
+            <div className="mt-4">
+              <label className="font-label-sm text-label-sm text-on-surface-variant ml-1 mb-1 block">
+                What would you like to do? <span className="opacity-60">(optional)</span>
+              </label>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="e.g. I love street food and live music, travelling with kids, want a relaxed pace and mostly free activities…"
+                rows={2}
+                className="w-full bg-surface-container-highest border-0 rounded-2xl py-3 px-5 font-body-md text-body-md focus:ring-2 focus:ring-secondary focus:outline-none resize-none"
+              />
+              <button
+                onClick={handleGenerate}
+                disabled={generating}
+                className="mt-3 w-full sm:w-auto bg-secondary-container text-on-secondary-container ai-glow flex items-center justify-center gap-2 px-6 py-3 rounded-full hover:bg-secondary-fixed transition-colors font-label-md text-label-md cursor-pointer disabled:opacity-60"
+              >
+                <span
+                  className="material-symbols-outlined"
+                  style={{ fontVariationSettings: "'FILL' 1" }}
+                >
+                  auto_awesome
+                </span>
+                {generating ? "Generating…" : "Generate Itinerary"}
               </button>
             </div>
           </div>
 
-          {/* Timeline */}
-          <div className="glass-card rounded-xl p-6 md:p-8 flex-1">
-            <div className="flex items-center gap-4 mb-8">
-              <h3 className="font-headline-md text-headline-md text-on-surface">Day 1</h3>
-              <span className="font-label-sm text-label-sm bg-surface-container px-3 py-1 rounded-full text-on-surface-variant">Saturday, Nov 16</span>
+          {generating && (
+            <div className="glass-card rounded-xl p-12 flex flex-col items-center justify-center gap-4 text-on-surface-variant">
+              <span className="material-symbols-outlined text-secondary animate-spin text-4xl">
+                progress_activity
+              </span>
+              <p className="font-body-md">Crafting your itinerary…</p>
             </div>
-            <div className="relative pl-2 md:pl-4">
-              {/* Route Line */}
-              <div className="route-line"></div>
+          )}
 
-              {/* Stop 1 */}
-              <div className="relative pl-12 md:pl-16 mb-10 group">
-                <div className="absolute left-0 top-1 w-14 h-14 bg-surface-bright rounded-full border-2 border-secondary flex items-center justify-center timeline-dot shadow-sm group-hover:scale-110 transition-transform cursor-grab">
-                  <span className="font-label-md text-label-md text-secondary">09:00</span>
+          {generated && !generating && (
+            <div className="glass-card rounded-xl p-6 md:p-8">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+                <div>
+                  <h2 className="font-headline-lg text-headline-lg text-on-surface">
+                    {generated.title}
+                  </h2>
+                  <p className="font-body-md text-body-md text-on-surface-variant mt-1">
+                    {generated.destination} • {generated.duration} • {generated.stops.length}{" "}
+                    stops{generated.total_budget ? ` • ${generated.total_budget}` : ""}
+                  </p>
                 </div>
-                <div className="glass-card rounded-lg p-4 md:p-5 hover:-translate-y-1 transition-transform duration-300 cursor-pointer">
-                  <div className="flex justify-between items-start mb-3">
-                    <div>
-                      <h4 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Nike Art Gallery</h4>
-                      <p className="font-body-md text-body-md text-on-surface-variant">Lekki Phase 1 • Art &amp; Culture</p>
-                    </div>
-                    <div className="bg-secondary text-on-secondary px-3 py-1 rounded-full flex items-center gap-1">
-                      <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                      <span className="font-label-sm text-label-sm">98% Match</span>
-                    </div>
-                  </div>
-                  <div className="flex gap-4 text-on-surface-variant">
-                    <div className="flex items-center gap-1 font-label-sm text-label-sm">
-                      <span className="material-symbols-outlined text-sm">schedule</span>
-                      2.5 hours
-                    </div>
-                    <div className="flex items-center gap-1 font-label-sm text-label-sm">
-                      <span className="material-symbols-outlined text-sm">payments</span>
-                      Free Entry
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Transit Info */}
-              <div className="relative pl-12 md:pl-16 mb-10 h-8 flex items-center">
-                <div className="bg-surface-container-highest rounded-full px-4 py-1.5 flex items-center gap-2 font-label-sm text-label-sm text-on-surface-variant z-10 shadow-sm">
-                  <span className="material-symbols-outlined text-sm">directions_car</span>
-                  35 min drive (Est. ₦4,500 Uber)
-                </div>
-              </div>
-
-              {/* Stop 2 */}
-              <div className="relative pl-12 md:pl-16 mb-10 group">
-                <div className="absolute left-0 top-1 w-14 h-14 bg-surface-bright rounded-full border-2 border-secondary flex items-center justify-center timeline-dot shadow-sm group-hover:scale-110 transition-transform cursor-grab">
-                  <span className="font-label-md text-label-md text-secondary">12:30</span>
-                </div>
-                <div className="glass-card rounded-lg p-4 md:p-5 hover:-translate-y-1 transition-transform duration-300 cursor-pointer">
-                  <div className="flex justify-between items-start mb-3">
-                    <div>
-                      <h4 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Terra Kulture</h4>
-                      <p className="font-body-md text-body-md text-on-surface-variant">Victoria Island • Food &amp; Art</p>
-                    </div>
-                    <div className="bg-secondary text-on-secondary px-3 py-1 rounded-full flex items-center gap-1">
-                      <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                      <span className="font-label-sm text-label-sm">95% Match</span>
-                    </div>
-                  </div>
-                  <p className="font-body-md text-body-md text-on-surface mb-3 line-clamp-2">Authentic Nigerian cuisine in a vibrant cultural center. The AI suggests trying the Ofada rice or Asun.</p>
-                  <div className="flex gap-4 text-on-surface-variant">
-                    <div className="flex items-center gap-1 font-label-sm text-label-sm">
-                      <span className="material-symbols-outlined text-sm">schedule</span>
-                      1.5 hours
-                    </div>
-                    <div className="flex items-center gap-1 font-label-sm text-label-sm">
-                      <span className="material-symbols-outlined text-sm">payments</span>
-                      Est. ₦15,000
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Transit Info */}
-              <div className="relative pl-12 md:pl-16 mb-10 h-8 flex items-center">
-                <div className="bg-surface-container-highest rounded-full px-4 py-1.5 flex items-center gap-2 font-label-sm text-label-sm text-on-surface-variant z-10 shadow-sm">
-                  <span className="material-symbols-outlined text-sm">directions_car</span>
-                  15 min drive (Est. ₦2,000 Uber)
-                </div>
-              </div>
-
-              {/* Stop 3 */}
-              <div className="relative pl-12 md:pl-16 group">
-                <div className="absolute left-0 top-1 w-14 h-14 bg-surface-bright rounded-full border-2 border-secondary flex items-center justify-center timeline-dot shadow-sm group-hover:scale-110 transition-transform cursor-grab">
-                  <span className="font-label-md text-label-md text-secondary">14:30</span>
-                </div>
-                <div className="glass-card rounded-lg p-4 md:p-5 hover:-translate-y-1 transition-transform duration-300 cursor-pointer">
-                  <div className="flex justify-between items-start mb-3">
-                    <div>
-                      <h4 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Freedom Park</h4>
-                      <p className="font-body-md text-body-md text-on-surface-variant">Lagos Island • History &amp; Leisure</p>
-                    </div>
-                    <div className="bg-secondary text-on-secondary px-3 py-1 rounded-full flex items-center gap-1">
-                      <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                      <span className="font-label-sm text-label-sm">90% Match</span>
-                    </div>
-                  </div>
-                  <p className="font-body-md text-body-md text-on-surface mb-3 line-clamp-2">A memorial and leisure park born from the ruins of a colonial prison. Great for a late afternoon stroll.</p>
-                  <div className="flex gap-4 text-on-surface-variant">
-                    <div className="flex items-center gap-1 font-label-sm text-label-sm">
-                      <span className="material-symbols-outlined text-sm">schedule</span>
-                      2 hours
-                    </div>
-                    <div className="flex items-center gap-1 font-label-sm text-label-sm">
-                      <span className="material-symbols-outlined text-sm">payments</span>
-                      ₦1,000 Entry
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Add Stop Button */}
-              <div className="relative pl-12 md:pl-16 mt-8">
-                <button className="w-full border-2 border-dashed border-outline-variant/50 rounded-lg p-4 text-on-surface-variant hover:border-secondary hover:text-secondary hover:bg-secondary/5 transition-all flex items-center justify-center gap-2 font-label-md text-label-md cursor-pointer">
-                  <span className="material-symbols-outlined">add_circle</span>
-                  Add another stop
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="bg-primary text-on-primary flex items-center gap-2 px-5 py-2.5 rounded-full hover:opacity-90 transition-all font-label-md text-label-md cursor-pointer disabled:opacity-60 whitespace-nowrap"
+                >
+                  <span className="material-symbols-outlined text-sm">bookmark_add</span>
+                  {saving ? "Saving…" : "Save Itinerary"}
                 </button>
               </div>
+
+              <div className="relative pl-2 md:pl-4">
+                {generated.stops.map((stop, i) => (
+                  <div key={i} className="relative pl-12 md:pl-16 mb-8 group">
+                    <div className="absolute left-0 top-1 w-12 h-12 bg-surface-bright rounded-full border-2 border-secondary flex items-center justify-center shadow-sm">
+                      <span className="material-symbols-outlined text-secondary text-[20px]">
+                        {VISIT_ICONS[stop.visit_time] ?? "place"}
+                      </span>
+                    </div>
+                    <div className="glass-card rounded-lg p-4 md:p-5">
+                      <h4 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">
+                        {stop.title}
+                      </h4>
+                      <p className="font-body-md text-body-md text-on-surface-variant mb-2">
+                        {stop.location}
+                        {stop.category ? ` • ${stop.category}` : ""}
+                      </p>
+                      {stop.description && (
+                        <p className="font-body-md text-body-md text-on-surface mb-3">
+                          {stop.description}
+                        </p>
+                      )}
+                      <div className="flex flex-wrap gap-4 text-on-surface-variant text-sm">
+                        <span className="flex items-center gap-1 capitalize">
+                          <span className="material-symbols-outlined text-sm">schedule</span>
+                          {stop.visit_time} • {stop.duration}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <span className="material-symbols-outlined text-sm">payments</span>
+                          {stop.estimated_cost}
+                        </span>
+                      </div>
+                    </div>
+                    {i < generated.stops.length - 1 && (
+                      <div className="absolute left-[23px] md:left-[31px] top-14 bottom-[-16px] w-0.5 bg-outline-variant/40" />
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
+
+          {!generated && !generating && (
+            <div className="glass-card rounded-xl p-12 text-center text-on-surface-variant">
+              <span className="material-symbols-outlined text-5xl mb-3">map</span>
+              <p className="font-body-md">
+                Enter a destination and tap Generate to create your itinerary.
+              </p>
+            </div>
+          )}
         </section>
       </main>
 

@@ -1,11 +1,37 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-
+import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      toast.error(error.message);
+      setLoading(false);
+      return;
+    }
+    router.push("/dashboard");
+  }
+
+  async function handleGoogleLogin() {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/auth/callback?next=/dashboard` },
+    });
+    if (error) toast.error(error.message);
+  }
 
   return (
     <main className="w-full h-screen flex flex-col md:flex-row overflow-hidden bg-background">
@@ -78,7 +104,7 @@ export default function LoginPage() {
             </p>
           </div>
           {/* Form */}
-          <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+          <form className="space-y-6" onSubmit={handleSubmit}>
             {/* Email Field */}
             <div className="space-y-2">
               <label
@@ -93,6 +119,9 @@ export default function LoginPage() {
                   id="email"
                   placeholder="name@example.com"
                   type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
                 />
                 <span className="material-symbols-outlined absolute right-6 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-secondary pointer-events-none">
                   mail
@@ -121,6 +150,9 @@ export default function LoginPage() {
                   id="password"
                   placeholder="••••••••"
                   type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
                 />
                 <button
                   className="absolute right-6 top-1/2 -translate-y-1/2 text-outline hover:text-secondary cursor-pointer"
@@ -135,11 +167,12 @@ export default function LoginPage() {
             </div>
             {/* Primary Action */}
             <button
-              className="w-full py-5 bg-secondary text-on-secondary rounded-full font-label-md text-label-md hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg shadow-secondary/20 cursor-pointer"
+              className="w-full py-5 bg-secondary text-on-secondary rounded-full font-label-md text-label-md hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg shadow-secondary/20 cursor-pointer disabled:opacity-60"
               type="submit"
+              disabled={loading}
             >
-              Continue to My Journey
-              <span className="material-symbols-outlined">arrow_forward</span>
+              {loading ? "Signing in…" : "Continue to My Journey"}
+              {!loading && <span className="material-symbols-outlined">arrow_forward</span>}
             </button>
           </form>
           {/* Divider */}
@@ -152,7 +185,11 @@ export default function LoginPage() {
           </div>
           {/* Social Logins */}
           <div className="grid grid-cols-2 gap-4">
-            <button className="flex items-center justify-center gap-3 py-4 rounded-full ring-1 ring-outline-variant hover:bg-surface-container-low transition-colors active:scale-95 duration-200 cursor-pointer">
+            <button
+              type="button"
+              onClick={handleGoogleLogin}
+              className="flex items-center justify-center gap-3 py-4 rounded-full ring-1 ring-outline-variant hover:bg-surface-container-low transition-colors active:scale-95 duration-200 cursor-pointer"
+            >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 alt="Google"

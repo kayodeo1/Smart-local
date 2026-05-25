@@ -1,4 +1,30 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { api } from "@/lib/api";
+import type { AttractionList } from "@/lib/types";
+
 export default function HiddenGems() {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [gems, setGems] = useState<AttractionList[]>([]);
+
+  useEffect(() => {
+    // "Hidden gems" = attractions beyond the top-rated headline spots.
+    api.attractions
+      .list({ ordering: "rating", page_size: "8" })
+      .then((d) => setGems(d.results.slice(0, 6)))
+      .catch(() => setGems([]));
+  }, []);
+
+  const scroll = (direction: "left" | "right") => {
+    if (!scrollRef.current) return;
+    scrollRef.current.scrollBy({
+      left: direction === "left" ? -420 : 420,
+      behavior: "smooth",
+    });
+  };
+
   return (
     <section className="py-24 bg-primary text-on-primary overflow-hidden">
       <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
@@ -13,75 +39,44 @@ export default function HiddenGems() {
             </p>
           </div>
           <div className="flex gap-4">
-            <button className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors cursor-pointer">
-              <span className="material-symbols-outlined text-white">
-                chevron_left
-              </span>
+            <button
+              onClick={() => scroll("left")}
+              className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-white">chevron_left</span>
             </button>
-            <button className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors cursor-pointer">
-              <span className="material-symbols-outlined text-white">
-                chevron_right
-              </span>
+            <button
+              onClick={() => scroll("right")}
+              className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-white">chevron_right</span>
             </button>
           </div>
         </div>
-        <div className="flex gap-gutter overflow-x-auto pb-8 snap-x no-scrollbar">
-          {/* Gem Card 1 */}
-          <div className="min-w-[300px] md:min-w-[400px] snap-start group cursor-pointer">
-            <div className="h-[500px] rounded-xl overflow-hidden relative mb-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                alt="Olumo Rock"
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                src="https://images.unsplash.com/photo-1504541316369-51f315861945?w=800&q=80&fit=crop"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent"></div>
-              <div className="absolute bottom-0 left-0 p-6">
-                <h3 className="font-headline-md text-white mb-2">Olumo Rock</h3>
-                <p className="font-body-md text-white/60">
-                  Abeokuta, Ogun State
-                </p>
+        <div ref={scrollRef} className="flex gap-gutter overflow-x-auto pb-8 snap-x no-scrollbar">
+          {gems.map((gem) => (
+            <Link
+              key={gem.id}
+              href={`/discover/${gem.id}`}
+              className="min-w-[300px] md:min-w-[400px] snap-start group cursor-pointer"
+            >
+              <div className="h-[500px] rounded-xl overflow-hidden relative mb-4">
+                <img
+                  alt={gem.name}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  src={gem.image}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent"></div>
+                <div className="absolute bottom-0 left-0 p-6">
+                  <h3 className="font-headline-md text-white mb-2">{gem.name}</h3>
+                  <p className="font-body-md text-white/60 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[16px]">location_on</span>
+                    {gem.location}
+                  </p>
+                </div>
               </div>
-            </div>
-          </div>
-          {/* Gem Card 2 */}
-          <div className="min-w-[300px] md:min-w-[400px] snap-start group cursor-pointer">
-            <div className="h-[500px] rounded-xl overflow-hidden relative mb-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                alt="Kajuru Castle"
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                src="https://images.unsplash.com/photo-1773325724090-e46d4838ab6f?w=800&q=80&fit=crop"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent"></div>
-              <div className="absolute bottom-0 left-0 p-6">
-                <h3 className="font-headline-md text-white mb-2">
-                  Kajuru Castle
-                </h3>
-                <p className="font-body-md text-white/60">
-                  Kajuru, Kaduna State
-                </p>
-              </div>
-            </div>
-          </div>
-          {/* Gem Card 3 */}
-          <div className="min-w-[300px] md:min-w-[400px] snap-start group cursor-pointer">
-            <div className="h-[500px] rounded-xl overflow-hidden relative mb-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                alt="Gurara Falls"
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                src="https://images.unsplash.com/photo-1620246403639-71409c17084b?w=800&q=80&fit=crop"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent"></div>
-              <div className="absolute bottom-0 left-0 p-6">
-                <h3 className="font-headline-md text-white mb-2">
-                  Gurara Falls
-                </h3>
-                <p className="font-body-md text-white/60">Niger State</p>
-              </div>
-            </div>
-          </div>
+            </Link>
+          ))}
         </div>
       </div>
     </section>

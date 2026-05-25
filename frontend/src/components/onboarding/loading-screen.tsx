@@ -110,7 +110,7 @@ export default function LoadingScreen() {
         <div className="mt-16 h-20 flex items-center justify-center">
           {loadingState >= 1 ? (
             <button
-              onClick={() => router.push("/")}
+              onClick={() => router.push("/dashboard")}
               className="group relative flex items-center gap-2 bg-primary text-on-primary px-8 py-4 rounded-full font-label-md text-label-md transition-all duration-500 hover:shadow-2xl active:scale-90 animate-[fade-in-up_0.5s_ease-out] cursor-pointer"
             >
               <span>Enter Dashboard</span>
